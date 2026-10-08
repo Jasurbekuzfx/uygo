@@ -516,15 +516,15 @@ export const SAMPLE_TEST_PROPERTIES = [
   }
 ];
 
+export const SUPER_ADMIN_ID = '8225823974';
 export const DEFAULT_ADMIN_IDS = [
-  '8225823974'
+  SUPER_ADMIN_ID
 ];
 
-export function isUserAdmin(userId, customAdminIds = []) {
+export function isUserAdmin(userId) {
   if (!userId) return false;
   const targetId = String(userId).trim();
-  const allAdmins = [...DEFAULT_ADMIN_IDS, ...(Array.isArray(customAdminIds) ? customAdminIds.map(String) : [])];
-  return allAdmins.includes(targetId);
+  return targetId === SUPER_ADMIN_ID;
 }
 
 export const DEFAULT_BILLING_SETTINGS = {

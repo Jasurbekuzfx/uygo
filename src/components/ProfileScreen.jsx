@@ -126,9 +126,6 @@ export default function ProfileScreen({
             {currentUser?.phone || 'Telefon raqam kiritilmagan'}
           </div>
           <div 
-            onClick={() => {
-              if (onUnlockAdminPin) onUnlockAdminPin();
-            }}
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -139,8 +136,7 @@ export default function ProfileScreen({
               borderRadius: '6px', 
               fontSize: '11px', 
               color: '#111315', 
-              fontWeight: '700',
-              cursor: 'pointer'
+              fontWeight: '700'
             }}
             title={isAdmin ? "Super Admin" : "Foydalanuvchi"}
           >
@@ -284,68 +280,66 @@ export default function ProfileScreen({
         </div>
       </div>
 
-      {/* Admin Direct Price Settings Banner */}
-      <div
-        onClick={() => {
-          tg.haptic('medium');
-          if (isAdmin) {
+      {/* Admin Direct Price Settings Banner (Faqat bitta Admin hisobi uchun) */}
+      {isAdmin && (
+        <div
+          onClick={() => {
+            tg.haptic('medium');
             if (onOpenAdminPricing) {
               onOpenAdminPricing();
             } else if (onOpenAdminPanel) {
               onOpenAdminPanel();
             }
-          } else {
-            if (onUnlockAdminPin) onUnlockAdminPin();
-          }
-        }}
-        style={{
-          background: 'linear-gradient(135deg, #FFFDF0 0%, #FFF9DB 100%)',
-          border: '1.5px solid #FFD400',
-          borderRadius: '20px',
-          padding: '16px 18px',
-          marginBottom: '16px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: 'var(--shadow-sm)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: '#111315',
+          }}
+          style={{
+            background: 'linear-gradient(135deg, #FFFDF0 0%, #FFF9DB 100%)',
+            border: '1.5px solid #FFD400',
+            borderRadius: '20px',
+            padding: '16px 18px',
+            marginBottom: '16px',
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFD400'
-          }}>
-            <Crown size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: '#111315' }}>
-              VIP & TOP narxlarini belgilash 👑
+            justifyContent: 'space-between',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
+              background: '#111315',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFD400'
+            }}>
+              <Crown size={22} />
             </div>
-            <div style={{ fontSize: '11.5px', color: '#7E858E', marginTop: '2px' }}>
-              {isAdmin ? 'VIP, TOP narxi va to‘lov kartasini o‘zgartirish' : 'Admin uchun narxlarni boshqarish paneli'}
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '800', color: '#111315' }}>
+                VIP & TOP narxlarini belgilash 👑
+              </div>
+              <div style={{ fontSize: '11.5px', color: '#7E858E', marginTop: '2px' }}>
+                VIP, TOP narxi va to‘lov kartasini o‘zgartirish
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{
-          background: '#111315',
-          color: '#FFD400',
-          padding: '6px 12px',
-          borderRadius: '10px',
-          fontSize: '11.5px',
-          fontWeight: '800',
-          whiteSpace: 'nowrap'
-        }}>
-          {isAdmin ? 'Sozlash ⚙️' : 'Kirish 🔐'}
+          <div style={{
+            background: '#111315',
+            color: '#FFD400',
+            padding: '6px 12px',
+            borderRadius: '10px',
+            fontSize: '11.5px',
+            fontWeight: '800',
+            whiteSpace: 'nowrap'
+          }}>
+            Sozlash ⚙️
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Menu List */}
       <div style={{
@@ -358,19 +352,15 @@ export default function ProfileScreen({
         {[
           { icon: Building2, label: 'Mening e’lonlarim', action: onOpenMyListings, badge: myListingsCount },
           { icon: Heart, label: 'Saqlangan e’lonlar', action: onOpenFavorites, badge: favoritesCount },
-          { 
+          ...(isAdmin ? [{ 
             icon: Crown, 
             label: 'VIP / TOP xizmatlari narxini qo‘yish (Admin)', 
             action: () => {
-              if (isAdmin) {
-                if (onOpenAdminPricing) onOpenAdminPricing();
-                else onOpenAdminPanel();
-              } else {
-                if (onUnlockAdminPin) onUnlockAdminPin();
-              }
+              if (onOpenAdminPricing) onOpenAdminPricing();
+              else if (onOpenAdminPanel) onOpenAdminPanel();
             }, 
             badge: 'Admin 👑' 
-          },
+          }] : []),
           { icon: MessageSquare, label: 'Xabarlar', action: onOpenMessages, badge: null },
           { icon: CreditCard, label: 'To‘lovlar tarixi (Payme / Click)', action: () => setShowPayments(true), badge: null },
           { icon: Settings, label: 'Sozlamalar (Valyuta, Til)', action: () => setShowSettings(true), badge: null },
@@ -420,8 +410,8 @@ export default function ProfileScreen({
         })}
       </div>
 
-      {/* Admin Panel Entry Button */}
-      {isAdmin ? (
+      {/* Admin Panel Entry Button (FAQAT ADMIN UCHUN) */}
+      {isAdmin && (
         <button
           onClick={() => {
             tg.haptic('medium');
@@ -447,32 +437,6 @@ export default function ProfileScreen({
         >
           <Shield size={16} color="#FFD400" />
           <span>Admin Boshqaruv Paneli 👑</span>
-        </button>
-      ) : (
-        <button
-          onClick={() => {
-            tg.haptic('light');
-            if (onUnlockAdminPin) onUnlockAdminPin();
-          }}
-          style={{
-            width: '100%',
-            background: '#F7F8FA',
-            border: '1px solid #E8ECEF',
-            borderRadius: '16px',
-            padding: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            fontSize: '12.5px',
-            fontWeight: '700',
-            color: '#7E858E',
-            cursor: 'pointer',
-            marginTop: '8px'
-          }}
-        >
-          <Lock size={14} color="#7E858E" />
-          <span>Admin rejimiga kirish (PIN: 7777)</span>
         </button>
       )}
 

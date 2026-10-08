@@ -126,39 +126,11 @@ export default function App() {
     return [];
   });
 
-  // Admin Access Security (Telegram ID: 8225823974)
-  const [adminIds, setAdminIds] = useState(() => {
-    const saved = localStorage.getItem('uygo_admin_ids');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {}
-    }
-    return DEFAULT_ADMIN_IDS;
-  });
-  const [devAdminUnlocked, setDevAdminUnlocked] = useState(false);
-
-  // Check if current user is authorized Admin
+  // Admin Access Security: Faqat yagona rasmiy Telegram ID 8225823974 admin bo'la oladi
   const isCurrentAdmin = useMemo(() => {
-    if (devAdminUnlocked) return true;
-    if (!currentUser) return false;
-    return isUserAdmin(currentUser.id, adminIds);
-  }, [currentUser, adminIds, devAdminUnlocked]);
-
-  const handleUnlockAdminPin = () => {
-    if (isCurrentAdmin) {
-      showToast('Siz allaqachon Adminsiz! 👑');
-      return;
-    }
-    const pin = prompt('Admin boshqaruv paneliga kirish uchun PIN-kodni kiriting (Standart: 7777):');
-    if (pin === '7777') {
-      setDevAdminUnlocked(true);
-      showToast('Admin huquqlari berildi! 👑');
-    } else if (pin) {
-      showToast('Noto‘g‘ri PIN-kod!');
-    }
-  };
+    if (!currentUser?.id) return false;
+    return isUserAdmin(currentUser.id);
+  }, [currentUser]);
 
   // Active Screen / Navigation Tab
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'favorites', 'create', 'messages', 'profile'
@@ -209,14 +181,42 @@ export default function App() {
   useEffect(() => {
     tg.init();
     try {
-      const savedProfile = localStorage.getItem('uygo_user_profile');
-      if (savedProfile) {
-        setCurrentUser(JSON.parse(savedProfile));
+      const liveUser = tg.getUser();
+      // Telegram Mini App ichida: Har doim joriy haqiqiy Telegram hisobidan ID olinadi
+      if (tg.isAvailable && liveUser?.id) {
+        const savedProfile = localStorage.getItem('uygo_user_profile');
+        if (savedProfile) {
+          try {
+            const parsed = JSON.parse(savedProfile);
+            // Faqat joriy hisobga tegishli qo'shimcha ma'lumotlarni birlashtirish
+            if (String(parsed.id) === String(liveUser.id)) {
+              setCurrentUser({ ...liveUser, ...parsed, id: liveUser.id });
+              return;
+            }
+          } catch (e) {}
+        }
+        setCurrentUser(liveUser);
         return;
       }
-    } catch (e) {}
-    const user = tg.getUser();
-    setCurrentUser(user);
+
+      // Oddiy brauzer sinovi uchun:
+      const savedProfile = localStorage.getItem('uygo_user_profile');
+      if (savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          // Agar brauzerda eski admin ma'lumoti saqlanib qolgan bo'lsa, tozalaymiz
+          if (parsed && String(parsed.id) === '8225823974') {
+            localStorage.removeItem('uygo_user_profile');
+          } else if (parsed && parsed.id) {
+            setCurrentUser(parsed);
+            return;
+          }
+        } catch (e) {}
+      }
+      setCurrentUser(liveUser);
+    } catch (e) {
+      setCurrentUser(tg.getUser());
+    }
   }, []);
 
   // Sync to LocalStorage (Clean Live)
@@ -981,7 +981,6 @@ export default function App() {
             <ProfileScreen
               currentUser={currentUser}
               isAdmin={isCurrentAdmin}
-              onUnlockAdminPin={handleUnlockAdminPin}
               myListingsCount={myListings.length}
               favoritesCount={favorites.length}
               totalViews={totalMyViews}
@@ -1117,7 +1116,7 @@ export default function App() {
         )}
 
         {/* Admin Panel Modal */}
-        {showAdminModal && (
+        {showAdminModal && isCurrentAdmin && (
           <AdminPanelModal
             listings={properties}
             banners={banners}
