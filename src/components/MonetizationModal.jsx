@@ -9,7 +9,6 @@ import { formatDateDDMMYYYY } from '../data/mockData';
 
 export default function MonetizationModal({
   userListings = [],
-  allListings = [],
   currentUser = null,
   billingSettings = {
     cardNumber: '8600 4910 2345 6789',
@@ -22,6 +21,7 @@ export default function MonetizationModal({
     bannerDays: 7
   },
   onSubmitPaymentRequest,
+  onOpenCreateListing,
   onClose
 }) {
   // Step 1: 'select_package', Step 2: 'payment_checkout', Step 3: 'pending_status'
@@ -30,7 +30,7 @@ export default function MonetizationModal({
   // Package Selection
   const [packageType, setPackageType] = useState('TOP'); // 'TOP', 'VIP', 'BANNER'
   const [selectedListingId, setSelectedListingId] = useState(
-    userListings[0]?.id || allListings[0]?.id || ''
+    userListings[0]?.id || ''
   );
 
   // Banner details (if packageType === 'BANNER')
@@ -42,6 +42,7 @@ export default function MonetizationModal({
   // Checkout Receipt state
   const [receiptImage, setReceiptImage] = useState(null);
   const [receiptError, setReceiptError] = useState('');
+  const [isCompressingReceipt, setIsCompressingReceipt] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
   const [submittedPayment, setSubmittedPayment] = useState(null);
 
@@ -66,8 +67,9 @@ export default function MonetizationModal({
       ? `VIP e’lon (${currentDays} kun)`
       : `Reklama banneri (${currentDays} kun)`;
 
-  const availableListings = userListings.length > 0 ? userListings : allListings;
-  const currentListing = availableListings.find(l => l.id === selectedListingId);
+  // FAQAT foydalanuvchining o‘z e’lonlari ko‘rsatiladi (boshqalarniki emas!)
+  const availableListings = userListings;
+  const currentListing = availableListings.find(l => l.id === selectedListingId) || availableListings[0];
 
   // Copy card number handler
   const handleCopyCard = () => {
@@ -80,8 +82,42 @@ export default function MonetizationModal({
     setTimeout(() => setCopiedCard(false), 2200);
   };
 
-  // Receipt file upload handler (converts to base64 for instant storage & preview)
-  const handleFileChange = (e) => {
+  // Compress receipt image to stay safely below 1MB Firestore limit (~50-80KB)
+  const compressReceipt = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1000;
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.72));
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Receipt file upload handler with canvas compression
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -91,12 +127,18 @@ export default function MonetizationModal({
     }
 
     setReceiptError('');
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      setReceiptImage(uploadEvent.target.result);
-      tg.haptic('success');
-    };
-    reader.readAsDataURL(file);
+    setIsCompressingReceipt(true);
+    try {
+      const compressed = await compressReceipt(file);
+      if (compressed) {
+        setReceiptImage(compressed);
+        tg.haptic('success');
+      }
+    } catch (err) {
+      setReceiptError('Rasmni yuklashda xatolik yuz berdi');
+    } finally {
+      setIsCompressingReceipt(false);
+    }
   };
 
   // Submit payment for verification
@@ -349,7 +391,7 @@ export default function MonetizationModal({
               {packageType !== 'BANNER' ? (
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#111315', marginBottom: '8px' }}>
-                    Ko‘tariladigan e’lonni tanlang:
+                    Ko‘tariladigan o‘zingizning e’loningiz:
                   </label>
                   {availableListings.length > 0 ? (
                     <select
@@ -365,8 +407,31 @@ export default function MonetizationModal({
                       ))}
                     </select>
                   ) : (
-                    <div style={{ padding: '12px', background: '#F8F9FA', borderRadius: '12px', fontSize: '12px', color: '#777' }}>
-                      Sizda faol e’lon yo‘q. E’lon joylagandan so‘ng uni TOP yoki VIP ga ko‘tarishingiz mumkin.
+                    <div style={{
+                      padding: '16px',
+                      background: '#FFFDF0',
+                      borderRadius: '16px',
+                      border: '1.5px dashed #FFD400',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '14px', fontWeight: '800', color: '#111315', marginBottom: '6px' }}>
+                        Sizda hali e’lonlar mavjud emas
+                      </div>
+                      <p style={{ fontSize: '12px', color: '#666', lineHeight: 1.4, marginBottom: '12px' }}>
+                        TOP yoki VIP xizmatidan foydalanish uchun avval o‘z e’loningizni joylang. Har bir foydalanuvchi faqat o‘zining e’lonini yuqoriga chiqara oladi!
+                      </p>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => {
+                          tg.haptic('medium');
+                          if (onOpenCreateListing) onOpenCreateListing();
+                          else onClose();
+                        }}
+                        style={{ padding: '8px 16px', fontSize: '12.5px', margin: '0 auto' }}
+                      >
+                        + Yangi e’lon berish
+                      </button>
                     </div>
                   )}
                 </div>
@@ -425,17 +490,19 @@ export default function MonetizationModal({
               )}
 
               {/* Proceed to Payment Button */}
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => {
-                  tg.haptic('medium');
-                  setStep('payment_checkout');
-                }}
-                style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: '800', marginTop: '6px' }}
-              >
-                To‘lovga o‘tish ({currentPrice.toLocaleString('uz-UZ')} so‘m) →
-              </button>
+              {packageType !== 'BANNER' && availableListings.length === 0 ? null : (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    tg.haptic('medium');
+                    setStep('payment_checkout');
+                  }}
+                  style={{ width: '100%', padding: '14px', fontSize: '15px', fontWeight: '800', marginTop: '6px' }}
+                >
+                  To‘lovga o‘tish ({currentPrice.toLocaleString('uz-UZ')} so‘m) →
+                </button>
+              )}
             </div>
           )}
 
@@ -555,6 +622,7 @@ export default function MonetizationModal({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <button
                       type="button"
+                      disabled={isCompressingReceipt}
                       onClick={() => {
                         tg.haptic('selection');
                         fileInputRef.current?.click();
@@ -569,8 +637,9 @@ export default function MonetizationModal({
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
-                        cursor: 'pointer',
-                        width: '100%'
+                        cursor: isCompressingReceipt ? 'not-allowed' : 'pointer',
+                        width: '100%',
+                        opacity: isCompressingReceipt ? 0.7 : 1
                       }}
                     >
                       <div style={{
@@ -586,10 +655,10 @@ export default function MonetizationModal({
                         <Upload size={22} color="#111315" />
                       </div>
                       <span style={{ fontSize: '14px', fontWeight: '800', color: '#111315' }}>
-                        Chekni yuklash
+                        {isCompressingReceipt ? '⏳ Chek tayyorlanmoqda...' : 'Chekni yuklash'}
                       </span>
                       <span style={{ fontSize: '11.5px', color: '#7E858E' }}>
-                        Bank ilovasi cheki yoki to‘lov skrinshotini tanlang
+                        {isCompressingReceipt ? 'Rasm hajmi ixchamlashmoqda...' : 'Bank ilovasi cheki yoki to‘lov skrinshotini tanlang'}
                       </span>
                     </button>
                   </div>
@@ -648,17 +717,19 @@ export default function MonetizationModal({
               <button
                 type="button"
                 className="btn-dark"
+                disabled={isCompressingReceipt || !receiptImage}
                 onClick={handleSubmitReceipt}
                 style={{
                   width: '100%',
                   padding: '14px',
                   fontSize: '15px',
                   fontWeight: '800',
-                  background: '#111315',
-                  color: '#FFD400'
+                  background: isCompressingReceipt || !receiptImage ? '#7E858E' : '#111315',
+                  color: isCompressingReceipt || !receiptImage ? '#FFF' : '#FFD400',
+                  cursor: isCompressingReceipt || !receiptImage ? 'not-allowed' : 'pointer'
                 }}
               >
-                Chekni tekshirishga yuborish
+                {isCompressingReceipt ? '⏳ Rasm ishlanmoqda...' : 'Chekni tekshirishga yuborish'}
               </button>
             </div>
           )}

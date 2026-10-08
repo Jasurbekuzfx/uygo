@@ -259,7 +259,12 @@ export default function App() {
       }
     });
     const unsubPayments = subscribeToPaymentRequests((items) => {
-      if (items && Array.isArray(items)) setPaymentRequests(items);
+      if (items && Array.isArray(items)) {
+        setPaymentRequests(items);
+        try {
+          localStorage.setItem('uygo_payment_requests', JSON.stringify(items));
+        } catch (e) {}
+      }
     });
     const unsubSettings = subscribeToBillingSettings((settings) => {
       if (settings) setBillingSettings(settings);
@@ -536,10 +541,15 @@ export default function App() {
   };
 
   // User submits payment request with receipt (Saves to state + Firebase)
-  const handleSubmitPaymentRequest = (newRequest) => {
+  const handleSubmitPaymentRequest = async (newRequest) => {
     setPaymentRequests(prev => [newRequest, ...prev]);
-    savePaymentRequestToFirebase(newRequest);
-    showToast('To‘lov chekingiz tekshirish uchun yuborildi ⏳');
+    showToast('To‘lov chekingiz yuborilmoqda... ⏳');
+    const success = await savePaymentRequestToFirebase(newRequest);
+    if (success) {
+      showToast('To‘lov chekingiz adminga yuborildi! ⏳');
+    } else {
+      showToast('⚠️ Chek saqlandi, bulutga ulanish tekshirilmoqda');
+    }
   };
 
   // Admin approves payment request
@@ -1036,11 +1046,20 @@ export default function App() {
         {/* VIP / TOP Monetization Modal */}
         {showMonetizationModal && (
           <MonetizationModal
-            userListings={properties.filter(p => p.owner?.id === currentUser?.id || p.ownerId?.includes('me') || p.ownerId === `user-${currentUser?.id}`)}
-            allListings={properties}
+            userListings={properties.filter(p => {
+              if (!currentUser?.id) return false;
+              const currentIdStr = String(currentUser.id);
+              return String(p.owner?.id) === currentIdStr ||
+                     String(p.ownerId) === `user-${currentIdStr}` ||
+                     String(p.ownerId) === currentIdStr;
+            })}
             currentUser={currentUser}
             billingSettings={billingSettings}
             onSubmitPaymentRequest={handleSubmitPaymentRequest}
+            onOpenCreateListing={() => {
+              setShowMonetizationModal(false);
+              setShowCreateModal(true);
+            }}
             onClose={() => setShowMonetizationModal(false)}
           />
         )}

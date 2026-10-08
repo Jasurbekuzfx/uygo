@@ -28,14 +28,24 @@ export const tg = {
         phone: u.phone_number ? (u.phone_number.startsWith('+') ? u.phone_number : `+${u.phone_number}`) : ''
       };
     }
-    // Fallback default mock user for web preview
+    // Web brauzerda har bir foydalanuvchi/akkaunt uchun alohida unikal ID yaratish
+    let guestId = '';
+    try {
+      guestId = localStorage.getItem('uygo_device_user_id');
+      if (!guestId) {
+        guestId = String(Math.floor(100000000 + Math.random() * 900000000));
+        localStorage.setItem('uygo_device_user_id', guestId);
+      }
+    } catch (e) {
+      guestId = 'guest_' + Date.now();
+    }
     return {
-      id: 998712345,
-      firstName: 'Alisher',
-      lastName: 'Usmonov',
-      username: '@alisher_uygo',
-      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      phone: '+998 90 912 34 56'
+      id: guestId,
+      firstName: 'Foydalanuvchi',
+      lastName: '',
+      username: `@user_${String(guestId).slice(-4)}`,
+      photoUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${guestId}`,
+      phone: ''
     };
   },
 

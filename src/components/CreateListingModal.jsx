@@ -384,7 +384,7 @@ export default function CreateListingModal({
                     }}
                     className="filter-input-box"
                   >
-                    {REGIONS.map(r => (
+                    {REGIONS.filter(r => r !== 'Barchasi').map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -410,50 +410,53 @@ export default function CreateListingModal({
                 />
               </div>
 
-              {/* Parametrlar: Xonalar, Maydon, Qavat */}
+              {/* Parametrlar: Xonalar, Maydon, Qavat, Jami qavat (2x2 toza grid) */}
               <div className="filter-group">
                 <label className="filter-label">Asosiy ko‘rsatkichlar</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#7E858E', display: 'block', marginBottom: '4px' }}>XONALAR</span>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', display: 'block', marginBottom: '5px' }}>XONALAR</span>
                     <input
                       type="number"
-                      placeholder="Xona"
+                      placeholder="Masalan: 2"
                       value={rooms}
                       onChange={(e) => setRooms(e.target.value)}
                       className="filter-input-box"
+                      style={{ width: '100%' }}
                     />
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#7E858E', display: 'block', marginBottom: '4px' }}>MAYDON (M²)</span>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', display: 'block', marginBottom: '5px' }}>MAYDON (M²)</span>
                     <input
                       type="number"
-                      placeholder="m²"
+                      placeholder="Masalan: 60"
                       value={area}
                       onChange={(e) => setArea(e.target.value)}
                       className="filter-input-box"
+                      style={{ width: '100%' }}
                     />
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#7E858E', display: 'block', marginBottom: '4px' }}>QAVAT / JAMI</span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <input
-                        type="number"
-                        placeholder="Qavat"
-                        value={floor}
-                        onChange={(e) => setFloor(e.target.value)}
-                        className="filter-input-box"
-                        style={{ padding: '8px' }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Jami"
-                        value={totalFloors}
-                        onChange={(e) => setTotalFloors(e.target.value)}
-                        className="filter-input-box"
-                        style={{ padding: '8px' }}
-                      />
-                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', display: 'block', marginBottom: '5px' }}>QAVAT</span>
+                    <input
+                      type="number"
+                      placeholder="Masalan: 4"
+                      value={floor}
+                      onChange={(e) => setFloor(e.target.value)}
+                      className="filter-input-box"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', display: 'block', marginBottom: '5px' }}>JAMI QAVAT</span>
+                    <input
+                      type="number"
+                      placeholder="Masalan: 9"
+                      value={totalFloors}
+                      onChange={(e) => setTotalFloors(e.target.value)}
+                      className="filter-input-box"
+                      style={{ width: '100%' }}
+                    />
                   </div>
                 </div>
               </div>
