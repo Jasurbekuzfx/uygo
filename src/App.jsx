@@ -688,66 +688,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Quick Demo Mode Badge & Switcher */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              margin: '0 16px 12px 16px',
-              padding: '8px 12px',
-              background: properties.length > 0 ? '#FFFDF0' : '#F7F8FA',
-              borderRadius: '14px',
-              border: properties.length > 0 ? '1px solid #FFD400' : '1px solid #E8ECEF',
-              fontSize: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: properties.length > 0 ? '#12B886' : '#7E858E'
-                }} />
-                <span style={{ fontWeight: '700', color: '#111315' }}>
-                  {properties.length > 0 ? `Mock Demo Variant (${properties.length} ta e’lon)` : 'Toza rejim (0 ta e’lon)'}
-                </span>
-              </div>
-              {properties.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={handleClearAll}
-                  style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #FA5252',
-                    borderRadius: '8px',
-                    padding: '3px 8px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: '#FA5252',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Tozalash
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleLoadDemo}
-                  style={{
-                    background: '#111315',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '4px 10px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: '#FFD400',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ✨ Demo yuklash
-                </button>
-              )}
-            </div>
+
 
             {/* Purpose Tabs (Sotuv / Ijara / Kunlik) */}
             <div className="purpose-tabs-wrapper">
