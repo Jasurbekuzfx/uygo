@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, Check, Trash2, Crown, Zap, Shield, Image as ImageIcon, 
   BarChart3, Plus, AlertCircle, Eye, DollarSign, ToggleLeft, ToggleRight,
@@ -12,6 +12,7 @@ export default function AdminPanelModal({
   banners = [],
   reports = [],
   paymentRequests = [],
+  initialTab = 'payments',
   billingSettings = {
     cardNumber: '8600 4910 2345 6789',
     cardHolder: 'UYGO ADMIN',
@@ -37,7 +38,7 @@ export default function AdminPanelModal({
   onRejectPayment,
   onSaveBillingSettings
 }) {
-  const [activeTab, setActiveTab] = useState('payments'); // 'payments', 'settings', 'listings', 'banners', 'reports', 'stats'
+  const [activeTab, setActiveTab] = useState(initialTab || 'payments'); // 'payments', 'settings', 'listings', 'banners', 'reports', 'stats'
   const [paymentFilter, setPaymentFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
   const [selectedReceiptPreview, setSelectedReceiptPreview] = useState(null);
 
@@ -51,6 +52,27 @@ export default function AdminPanelModal({
   const [editBannerPrice, setEditBannerPrice] = useState(billingSettings.bannerPrice || 120000);
   const [editBannerDays, setEditBannerDays] = useState(billingSettings.bannerDays || 7);
   const [settingsSavedNotice, setSettingsSavedNotice] = useState(false);
+
+  // Synchronize local form inputs when billingSettings updates asynchronously from Firebase
+  useEffect(() => {
+    if (billingSettings) {
+      if (billingSettings.cardNumber !== undefined) setEditCardNumber(billingSettings.cardNumber || '');
+      if (billingSettings.cardHolder !== undefined) setEditCardHolder(billingSettings.cardHolder || '');
+      if (billingSettings.topPrice !== undefined) setEditTopPrice(billingSettings.topPrice || 30000);
+      if (billingSettings.topDays !== undefined) setEditTopDays(billingSettings.topDays || 7);
+      if (billingSettings.vipPrice !== undefined) setEditVipPrice(billingSettings.vipPrice || 70000);
+      if (billingSettings.vipDays !== undefined) setEditVipDays(billingSettings.vipDays || 7);
+      if (billingSettings.bannerPrice !== undefined) setEditBannerPrice(billingSettings.bannerPrice || 120000);
+      if (billingSettings.bannerDays !== undefined) setEditBannerDays(billingSettings.bannerDays || 7);
+    }
+  }, [billingSettings]);
+
+  // Synchronize active tab when initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // New Banner Form State
   const [showAddBanner, setShowAddBanner] = useState(false);
@@ -144,8 +166,8 @@ export default function AdminPanelModal({
           overflowX: 'auto'
         }}>
           {[
+            { id: 'settings', label: '👑 Narxlar & Karta', count: null },
             { id: 'payments', label: 'To‘lovlar', count: pendingPaymentsCount, isAlert: pendingPaymentsCount > 0 },
-            { id: 'settings', label: 'Sozlamalar', count: null },
             { id: 'listings', label: 'E’lonlar', count: listings.length },
             { id: 'banners', label: 'Bannerlar', count: banners.length },
             { id: 'reports', label: 'Shikoyatlar', count: reports.length },
@@ -468,21 +490,309 @@ export default function AdminPanelModal({
           {activeTab === 'settings' && (
             <form onSubmit={handleSaveSettingsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{
-                background: '#FFFDF0',
+                background: 'linear-gradient(135deg, #FFFDF0 0%, #FFF9DB 100%)',
                 border: '1.5px solid #FFD400',
                 borderRadius: '16px',
-                padding: '14px',
-                fontSize: '12.5px',
+                padding: '14px 16px',
+                fontSize: '13px',
                 color: '#111315',
-                lineHeight: 1.5
+                lineHeight: 1.5,
+                boxShadow: 'var(--shadow-sm)'
               }}>
-                <strong>💳 To‘lov sozlamalari boshqaruvi:</strong> Karta raqami va narxlar to‘g‘ridan-to‘g‘ri shu yerdan o‘zgartiriladi. Hech qanday kod o‘zgartirish talab qilinmaydi.
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <Crown size={18} color="#B28900" />
+                  <strong style={{ fontSize: '14px' }}>VIP va Xizmat Narxlarini Belgilash</strong>
+                </div>
+                <div>
+                  Admin bu yerda VIP, TOP va Banner narxlarini o‘zgartirishi mumkin. O‘zgartirilgan narxlar darhol butun ilova bo‘yicha va Firebase bulutida yangilanadi.
+                </div>
               </div>
 
-              {/* Karta ma'lumotlari */}
-              <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E8ECEF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
-                  1. Karta ma’lumotlari (Foydalanuvchiga ko‘rinadi)
+              {/* 1. VIP XIZMATI NARXI */}
+              <div style={{
+                background: '#FFFFFF',
+                padding: '16px',
+                borderRadius: '18px',
+                border: '2px solid #FFD400',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                boxShadow: '0 2px 8px rgba(255, 212, 0, 0.12)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      background: '#FFD400',
+                      color: '#111315',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <Crown size={14} /> VIP E’lon
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
+                      VIP Paket Sozlamalari
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#B28900' }}>
+                    {(Number(editVipPrice) || 0).toLocaleString('uz-UZ')} so‘m
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>VIP narxi (so‘m)</label>
+                    <input
+                      type="number"
+                      className="filter-input-box"
+                      value={editVipPrice}
+                      onChange={(e) => setEditVipPrice(e.target.value)}
+                      style={{ width: '100%', marginTop: '4px', fontWeight: '800', fontSize: '15px' }}
+                      required
+                      placeholder="70000"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Muddati (kun)</label>
+                    <input
+                      type="number"
+                      className="filter-input-box"
+                      value={editVipDays}
+                      onChange={(e) => setEditVipDays(e.target.value)}
+                      style={{ width: '100%', marginTop: '4px', fontWeight: '800', fontSize: '15px' }}
+                      required
+                      placeholder="7"
+                    />
+                  </div>
+                </div>
+
+                {/* VIP Quick Price Chips */}
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', marginBottom: '6px' }}>
+                    Tezkor narx tanlash:
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {[30000, 50000, 70000, 100000, 150000].map(amt => (
+                      <button
+                        type="button"
+                        key={amt}
+                        onClick={() => {
+                          tg.haptic('selection');
+                          setEditVipPrice(amt);
+                        }}
+                        style={{
+                          border: Number(editVipPrice) === amt ? '1.5px solid #FFD400' : '1px solid #E8ECEF',
+                          background: Number(editVipPrice) === amt ? '#FFFDF0' : '#F7F8FA',
+                          borderRadius: '8px',
+                          padding: '4px 8px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#111315',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {amt.toLocaleString('uz-UZ')} so‘m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. TOP XIZMATI NARXI */}
+              <div style={{
+                background: '#FFFFFF',
+                padding: '16px',
+                borderRadius: '18px',
+                border: '1px solid #E8ECEF',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      background: '#111315',
+                      color: '#FFD400',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <Zap size={14} /> TOP E’lon
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
+                      TOP Paket Sozlamalari
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#111315' }}>
+                    {(Number(editTopPrice) || 0).toLocaleString('uz-UZ')} so‘m
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>TOP narxi (so‘m)</label>
+                    <input
+                      type="number"
+                      className="filter-input-box"
+                      value={editTopPrice}
+                      onChange={(e) => setEditTopPrice(e.target.value)}
+                      style={{ width: '100%', marginTop: '4px', fontWeight: '800', fontSize: '15px' }}
+                      required
+                      placeholder="30000"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Muddati (kun)</label>
+                    <input
+                      type="number"
+                      className="filter-input-box"
+                      value={editTopDays}
+                      onChange={(e) => setEditTopDays(e.target.value)}
+                      style={{ width: '100%', marginTop: '4px', fontWeight: '800', fontSize: '15px' }}
+                      required
+                      placeholder="7"
+                    />
+                  </div>
+                </div>
+
+                {/* TOP Quick Price Chips */}
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', marginBottom: '6px' }}>
+                    Tezkor narx tanlash:
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {[15000, 25000, 30000, 50000, 75000].map(amt => (
+                      <button
+                        type="button"
+                        key={amt}
+                        onClick={() => {
+                          tg.haptic('selection');
+                          setEditTopPrice(amt);
+                        }}
+                        style={{
+                          border: Number(editTopPrice) === amt ? '1.5px solid #111315' : '1px solid #E8ECEF',
+                          background: Number(editTopPrice) === amt ? '#F0F2F5' : '#F7F8FA',
+                          borderRadius: '8px',
+                          padding: '4px 8px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#111315',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {amt.toLocaleString('uz-UZ')} so‘m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. REKLAMA BANNERI NARXI */}
+              <div style={{
+                background: '#FFFFFF',
+                padding: '16px',
+                borderRadius: '18px',
+                border: '1px solid #E8ECEF',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      background: '#2481cc',
+                      color: '#FFFFFF',
+                      padding: '4px 8px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <ImageIcon size={14} /> Banner
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
+                      Reklama Banneri Sozlamalari
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#2481cc' }}>
+                    {(Number(editBannerPrice) || 0).toLocaleString('uz-UZ')} so‘m
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Banner narxi (so‘m)</label>
+                    <input
+                      type="number"
+                      className="filter-input-box"
+                      value={editBannerPrice}
+                      onChange={(e) => setEditBannerPrice(e.target.value)}
+                      style={{ width: '100%', marginTop: '4px', fontWeight: '800', fontSize: '15px' }}
+                      required
+                      placeholder="120000"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Muddati (kun)</label>
+                    <input
+                      type="number"
+                      className="filter-input-box"
+                      value={editBannerDays}
+                      onChange={(e) => setEditBannerDays(e.target.value)}
+                      style={{ width: '100%', marginTop: '4px', fontWeight: '800', fontSize: '15px' }}
+                      required
+                      placeholder="7"
+                    />
+                  </div>
+                </div>
+
+                {/* Banner Quick Price Chips */}
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#7E858E', marginBottom: '6px' }}>
+                    Tezkor narx tanlash:
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {[60000, 100000, 120000, 150000, 200000].map(amt => (
+                      <button
+                        type="button"
+                        key={amt}
+                        onClick={() => {
+                          tg.haptic('selection');
+                          setEditBannerPrice(amt);
+                        }}
+                        style={{
+                          border: Number(editBannerPrice) === amt ? '1.5px solid #2481cc' : '1px solid #E8ECEF',
+                          background: Number(editBannerPrice) === amt ? '#EBF5FB' : '#F7F8FA',
+                          borderRadius: '8px',
+                          padding: '4px 8px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: '#111315',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {amt.toLocaleString('uz-UZ')} so‘m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. KARTA MA'LUMOTLARI */}
+              <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '18px', border: '1px solid #E8ECEF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#111315', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CreditCard size={16} color="#111315" />
+                  <span>4. To‘lov Qabul Qilish Kartasi</span>
                 </div>
 
                 <div>
@@ -499,7 +809,7 @@ export default function AdminPanelModal({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#555' }}>Karta egasining ismi</label>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: '#555' }}>Karta egasining ismi (FISH)</label>
                   <input
                     type="text"
                     className="filter-input-box"
@@ -512,102 +822,14 @@ export default function AdminPanelModal({
                 </div>
               </div>
 
-              {/* Narxlar va muddatlar */}
-              <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E8ECEF', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
-                  2. Xizmat narxlari va muddatlari
-                </div>
-
-                {/* TOP Narxi & Muddat */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>TOP narxi (so‘m)</label>
-                    <input
-                      type="number"
-                      className="filter-input-box"
-                      value={editTopPrice}
-                      onChange={(e) => setEditTopPrice(e.target.value)}
-                      style={{ width: '100%', marginTop: '4px', fontWeight: '700' }}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Muddati (kun)</label>
-                    <input
-                      type="number"
-                      className="filter-input-box"
-                      value={editTopDays}
-                      onChange={(e) => setEditTopDays(e.target.value)}
-                      style={{ width: '100%', marginTop: '4px', fontWeight: '700' }}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* VIP Narxi & Muddat */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>VIP narxi (so‘m)</label>
-                    <input
-                      type="number"
-                      className="filter-input-box"
-                      value={editVipPrice}
-                      onChange={(e) => setEditVipPrice(e.target.value)}
-                      style={{ width: '100%', marginTop: '4px', fontWeight: '700' }}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Muddati (kun)</label>
-                    <input
-                      type="number"
-                      className="filter-input-box"
-                      value={editVipDays}
-                      onChange={(e) => setEditVipDays(e.target.value)}
-                      style={{ width: '100%', marginTop: '4px', fontWeight: '700' }}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Reklama Banner Narxi & Muddat */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Banner narxi (so‘m)</label>
-                    <input
-                      type="number"
-                      className="filter-input-box"
-                      value={editBannerPrice}
-                      onChange={(e) => setEditBannerPrice(e.target.value)}
-                      style={{ width: '100%', marginTop: '4px', fontWeight: '700' }}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#555' }}>Muddati (kun)</label>
-                    <input
-                      type="number"
-                      className="filter-input-box"
-                      value={editBannerDays}
-                      onChange={(e) => setEditBannerDays(e.target.value)}
-                      style={{ width: '100%', marginTop: '4px', fontWeight: '700' }}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Admin Huquqlari va Xavfsizlik */}
-              <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E8ECEF', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: '#111315', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {/* 5. SUPER ADMIN XAVFSIZLIK MA'LUMOTI */}
+              <div style={{ background: '#FFFFFF', padding: '14px 16px', borderRadius: '16px', border: '1px solid #E8ECEF', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#111315', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Shield size={16} color="#FFD400" />
-                  <span>3. Super Admin Huquqi</span>
+                  <span>Super Admin Telegram ID: <code>8225823974</code></span>
                 </div>
-                <div style={{ fontSize: '12.5px', color: '#111315', fontWeight: '700' }}>
-                  Asosiy Telegram ID: <code style={{ background: '#FFF9DB', padding: '2px 6px', borderRadius: '4px', color: '#B28900' }}>8225823974</code>
-                </div>
-                <div style={{ fontSize: '11.5px', color: '#7E858E', lineHeight: 1.4 }}>
-                  Faqat ushbu Telegram ID ga ega foydalanuvchiga profilda "Admin Boshqaruv Paneli" ko‘rinadi. Boshqa hech kim (oddiy foydalanuvchilar) admin panelni ko‘ra olmaydi va kira olmaydi.
+                <div style={{ fontSize: '11px', color: '#7E858E', lineHeight: 1.4 }}>
+                  Ushbu sozlamalar faqat vakolatli admin tomonidan o‘zgartirilishi mumkin. Oddiy foydalanuvchilar bu menyuni ko‘ra olmaydi.
                 </div>
               </div>
 
@@ -615,13 +837,14 @@ export default function AdminPanelModal({
                 <div style={{
                   background: '#E6FCF5',
                   color: '#12B886',
-                  padding: '10px 14px',
+                  padding: '12px 16px',
                   borderRadius: '12px',
                   fontSize: '13px',
                   fontWeight: '800',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  boxShadow: 'var(--shadow-sm)'
                 }}>
-                  ✅ Sozlamalar muvaffaqiyatli saqlandi!
+                  ✅ VIP va barcha xizmat narxlari saqlandi!
                 </div>
               )}
 
@@ -630,17 +853,19 @@ export default function AdminPanelModal({
                 className="btn-dark"
                 style={{
                   width: '100%',
-                  padding: '14px',
+                  padding: '15px',
                   fontSize: '14px',
                   fontWeight: '800',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px'
+                  gap: '8px',
+                  borderRadius: '16px',
+                  boxShadow: 'var(--shadow-md)'
                 }}
               >
-                <Save size={16} />
-                <span>Sozlamalarni saqlash</span>
+                <Save size={18} />
+                <span>NARXLARNI SAQLASH VA YANGILASH</span>
               </button>
             </form>
           )}

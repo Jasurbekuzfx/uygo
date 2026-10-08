@@ -192,6 +192,7 @@ export default function App() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMonetizationModal, setShowMonetizationModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminInitialTab, setAdminInitialTab] = useState('payments');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   const [showMyListingsModal, setShowMyListingsModal] = useState(false);
@@ -619,11 +620,14 @@ export default function App() {
     showToast('❌ To‘lov rad etildi');
   };
 
-  // Admin updates billing settings
+  // Admin updates billing settings (VIP, TOP, Banner prices and Card)
   const handleSaveBillingSettings = (newSettings) => {
     setBillingSettings(newSettings);
+    try {
+      localStorage.setItem('uygo_billing_settings', JSON.stringify(newSettings));
+    } catch (e) {}
     saveBillingSettingsToFirebase(newSettings);
-    showToast('To‘lov sozlamalari yangilandi! 💳');
+    showToast('✅ VIP va to‘lov narxlari yangilandi! 👑');
   };
 
   // Active filters count indicator
@@ -993,6 +997,15 @@ export default function App() {
                   showToast('Faqat Admin kira oladi!');
                   return;
                 }
+                setAdminInitialTab('payments');
+                setShowAdminModal(true);
+              }}
+              onOpenAdminPricing={() => {
+                if (!isCurrentAdmin) {
+                  showToast('Faqat Admin kira oladi!');
+                  return;
+                }
+                setAdminInitialTab('settings');
                 setShowAdminModal(true);
               }}
               onOpenCreateListing={() => setShowCreateModal(true)}
@@ -1062,6 +1075,12 @@ export default function App() {
           <MonetizationModal
             userListings={myListings}
             currentUser={currentUser}
+            isAdmin={isCurrentAdmin}
+            onOpenAdminSettings={() => {
+              setShowMonetizationModal(false);
+              setAdminInitialTab('settings');
+              setShowAdminModal(true);
+            }}
             billingSettings={billingSettings}
             onSubmitPaymentRequest={handleSubmitPaymentRequest}
             onOpenCreateListing={() => {
@@ -1105,6 +1124,7 @@ export default function App() {
             reports={reports}
             paymentRequests={paymentRequests}
             billingSettings={billingSettings}
+            initialTab={adminInitialTab}
             onClose={() => setShowAdminModal(false)}
             onApproveListing={(id) => {
               setProperties(prev => prev.map(p => p.id === id ? { ...p, status: 'active' } : p));

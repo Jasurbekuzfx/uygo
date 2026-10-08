@@ -10,6 +10,8 @@ import { formatDateDDMMYYYY } from '../data/mockData';
 export default function MonetizationModal({
   userListings = [],
   currentUser = null,
+  isAdmin = false,
+  onOpenAdminSettings,
   billingSettings = {
     cardNumber: '8600 4910 2345 6789',
     cardHolder: 'UYGO ADMIN',
@@ -239,6 +241,49 @@ export default function MonetizationModal({
                 </div>
               </div>
 
+              {/* Admin Pricing Edit Shortcut */}
+              {isAdmin && (
+                <div 
+                  onClick={() => {
+                    tg.haptic('medium');
+                    if (onOpenAdminSettings) onOpenAdminSettings();
+                  }}
+                  style={{
+                    background: '#FFFDF0',
+                    border: '1.5px dashed #FFD400',
+                    borderRadius: '16px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 6px rgba(255, 212, 0, 0.15)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Crown size={18} color="#B28900" />
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
+                        👑 Siz Adminsiz: Narxlarni o‘zgartirish
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#7E858E' }}>
+                        VIP, TOP yoki Banner narxini xohlagancha sozlang
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{
+                    background: '#111315',
+                    color: '#FFD400',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: '800'
+                  }}>
+                    Sozlash ⚙️
+                  </div>
+                </div>
+              )}
+
               {/* Package Cards */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <label style={{ fontSize: '13px', fontWeight: '800', color: '#111315' }}>
@@ -273,17 +318,17 @@ export default function MonetizationModal({
                         TOP
                       </span>
                       <span style={{ fontSize: '15px', fontWeight: '800', color: '#111315' }}>
-                        TOP e’lon ({billingSettings.topDays} kun)
+                        TOP e’lon ({billingSettings?.topDays || 7} kun)
                       </span>
                     </div>
                     <span style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: '800', color: '#111315' }}>
-                      {billingSettings.topPrice.toLocaleString('uz-UZ')} so‘m
+                      {(Number(billingSettings?.topPrice) || 30000).toLocaleString('uz-UZ')} so‘m
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.4 }}>
                     • Qidiruv natijalarida yuqori o‘rinda turadi<br />
                     • Sariq TOP nishoni bilan ajralib turadi<br />
-                    • Davomiyligi: {billingSettings.topDays} kun
+                    • Davomiyligi: {billingSettings?.topDays || 7} kun
                   </div>
                 </div>
 
@@ -330,17 +375,17 @@ export default function MonetizationModal({
                         VIP
                       </span>
                       <span style={{ fontSize: '15px', fontWeight: '800', color: '#111315' }}>
-                        VIP e’lon ({billingSettings.vipDays} kun)
+                        VIP e’lon ({billingSettings?.vipDays || 7} kun)
                       </span>
                     </div>
                     <span style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: '800', color: '#111315' }}>
-                      {billingSettings.vipPrice.toLocaleString('uz-UZ')} so‘m
+                      {(Number(billingSettings?.vipPrice) || 70000).toLocaleString('uz-UZ')} so‘m
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.4 }}>
                     • Bosh sahifaning maxsus VIP blokida joylashadi<br />
                     • Maxsus oltin ramka va VIP belgisi beriladi<br />
-                    • Davomiyligi: {billingSettings.vipDays} kun
+                    • Davomiyligi: {billingSettings?.vipDays || 7} kun
                   </div>
                 </div>
 
@@ -372,17 +417,17 @@ export default function MonetizationModal({
                         REKLAMA
                       </span>
                       <span style={{ fontSize: '15px', fontWeight: '800', color: '#111315' }}>
-                        Reklama banneri ({billingSettings.bannerDays} kun)
+                        Reklama banneri ({billingSettings?.bannerDays || 7} kun)
                       </span>
                     </div>
                     <span style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', fontWeight: '800', color: '#111315' }}>
-                      {billingSettings.bannerPrice.toLocaleString('uz-UZ')} so‘m
+                      {(Number(billingSettings?.bannerPrice) || 120000).toLocaleString('uz-UZ')} so‘m
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.4 }}>
                     • Bosh sahifaning tepa karuselida aylanuvchi katta banner<br />
                     • To‘g‘ridan-to‘g‘ri saytingizga yoki Telegram profilingizga havola<br />
-                    • Davomiyligi: {billingSettings.bannerDays} kun
+                    • Davomiyligi: {billingSettings?.bannerDays || 7} kun
                   </div>
                 </div>
               </div>
