@@ -1,0 +1,11 @@
+services:
+  - type: static
+    name: uygo
+    repo: https://github.com/Jasurbekuzfx/uygo
+    branch: main
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
