@@ -536,46 +536,7 @@ export const DEFAULT_BILLING_SETTINGS = {
   bannerDays: 7
 };
 
-export const INITIAL_PAYMENT_REQUESTS = [
-  {
-    id: 'pay-sample-1',
-    userId: 'user-demo-1',
-    userName: 'Akmal Raximov',
-    userTg: '@akmal_realtor',
-    packageType: 'TOP',
-    packageName: 'TOP xizmati (7 kun)',
-    amount: 30000,
-    amountFormatted: '30 000 so‘m',
-    durationDays: 7,
-    createdAt: '2026-10-08T11:20:00Z',
-    dateFormatted: '08.10.2026 11:20',
-    receiptImage: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80',
-    status: 'pending', // 'pending' | 'approved' | 'rejected'
-    targetType: 'listing',
-    targetListingId: 'prop-2',
-    targetListingTitle: 'Chilonzor yangi premium uy (3 xona)'
-  },
-  {
-    id: 'pay-sample-2',
-    userId: 'user-demo-2',
-    userName: 'Sardor Bek',
-    userTg: '@sardor_estate',
-    packageType: 'VIP',
-    packageName: 'VIP xizmati (7 kun)',
-    amount: 70000,
-    amountFormatted: '70 000 so‘m',
-    durationDays: 7,
-    createdAt: '2026-10-08T10:15:00Z',
-    dateFormatted: '08.10.2026 10:15',
-    receiptImage: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&auto=format&fit=crop&q=80',
-    status: 'approved',
-    targetType: 'listing',
-    targetListingId: 'prop-top-1',
-    targetListingTitle: 'Toshkent Siti Boulevard 3 xona',
-    startDate: '08.10.2026',
-    endDate: '15.10.2026'
-  }
-];
+export const INITIAL_PAYMENT_REQUESTS = [];
 
 export function formatDateDDMMYYYY(date = new Date()) {
   const d = new Date(date);

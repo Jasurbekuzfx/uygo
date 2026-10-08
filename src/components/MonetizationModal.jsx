@@ -99,13 +99,6 @@ export default function MonetizationModal({
     reader.readAsDataURL(file);
   };
 
-  // Sample receipt for fast testing
-  const handleUseSampleReceipt = () => {
-    tg.haptic('selection');
-    setReceiptImage('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80');
-    setReceiptError('');
-  };
-
   // Submit payment for verification
   const handleSubmitReceipt = (e) => {
     e.preventDefault();
@@ -598,24 +591,6 @@ export default function MonetizationModal({
                       <span style={{ fontSize: '11.5px', color: '#7E858E' }}>
                         Bank ilovasi cheki yoki to‘lov skrinshotini tanlang
                       </span>
-                    </button>
-
-                    {/* Quick Demo Test button */}
-                    <button
-                      type="button"
-                      onClick={handleUseSampleReceipt}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#2481cc',
-                        fontSize: '11.5px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        textAlign: 'center'
-                      }}
-                    >
-                      + Namunaviy test chekini biriktirish (tezkor test uchun)
                     </button>
                   </div>
                 ) : (

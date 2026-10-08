@@ -19,8 +19,6 @@ import BottomNavigation from './components/BottomNavigation';
 
 import { 
   INITIAL_PROPERTIES, 
-  SAMPLE_TEST_PROPERTIES,
-  SAMPLE_TEST_CONVERSATIONS,
   INITIAL_BANNERS, 
   PROPERTY_TYPES, 
   INITIAL_NOTIFICATIONS,
@@ -38,16 +36,20 @@ export default function App() {
   // Telegram User & Init
   const [currentUser, setCurrentUser] = useState(null);
 
-  // App Main State
+  // App Main State (Real Production: Starts clean)
   const [properties, setProperties] = useState(() => {
     const saved = localStorage.getItem('uygo_properties_live');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          // Filter out mock data if exists
+          const clean = parsed.filter(p => !String(p.id).startsWith('prop-top-') && !String(p.id).startsWith('prop-'));
+          return clean;
+        }
       } catch (e) {}
     }
-    return SAMPLE_TEST_PROPERTIES; // Active rich mock demo variant
+    return [];
   });
 
   const [banners, setBanners] = useState(() => {
@@ -60,10 +62,13 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          const clean = parsed.filter(id => !String(id).startsWith('prop-top-') && !String(id).startsWith('prop-'));
+          return clean;
+        }
       } catch (e) {}
     }
-    return ['prop-top-1', 'prop-1'];
+    return [];
   });
 
   const [conversations, setConversations] = useState(() => {
@@ -71,10 +76,13 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          const clean = parsed.filter(c => !String(c.id).startsWith('conv-'));
+          return clean;
+        }
       } catch (e) {}
     }
-    return SAMPLE_TEST_CONVERSATIONS;
+    return [];
   });
 
   const [notifications, setNotifications] = useState(() => {
@@ -94,16 +102,19 @@ export default function App() {
     return DEFAULT_BILLING_SETTINGS;
   });
 
-  // Payment Requests (manual verification queue)
+  // Payment Requests (Real Production: Starts clean)
   const [paymentRequests, setPaymentRequests] = useState(() => {
     const saved = localStorage.getItem('uygo_payment_requests');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          const clean = parsed.filter(p => !String(p.id).startsWith('pay-sample-'));
+          return clean;
+        }
       } catch (e) {}
     }
-    return INITIAL_PAYMENT_REQUESTS;
+    return [];
   });
 
   // Admin Access Security (Telegram ID: 8225823974)
@@ -385,21 +396,13 @@ export default function App() {
     }
   };
 
-  // Quick Demo vs Clean mode handlers
-  const handleLoadDemo = () => {
-    tg.haptic('success');
-    setProperties(SAMPLE_TEST_PROPERTIES);
-    setFavorites(['prop-top-1', 'prop-1']);
-    setConversations(SAMPLE_TEST_CONVERSATIONS);
-    showToast('✨ Mock Demo variant yuklandi (15 ta e’lon)!');
-  };
-
+  // Clear all data handler
   const handleClearAll = () => {
     tg.haptic('warning');
     setProperties([]);
     setFavorites([]);
     setConversations([]);
-    showToast('🧹 Barcha e’lonlar tozalandi (toza rejim)');
+    showToast('🧹 Barcha e’lonlar tozalandi');
   };
 
   // Add listing
@@ -788,25 +791,17 @@ export default function App() {
                 <p style={{ fontSize: '13.5px', color: '#7E858E', lineHeight: 1.5, marginBottom: '20px', maxWidth: '300px', margin: '0 auto 20px auto' }}>
                   Platforma to‘liq ishlashga tayyor. O‘z kvartirangiz, hovli yoki tijorat mulkingizni birinchi bo‘lib bepul joylang!
                 </p>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '18px' }}>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '18px' }}>
                   <button
                     className="btn-primary"
                     onClick={() => {
                       tg.haptic('medium');
                       setShowCreateModal(true);
                     }}
-                    style={{ padding: '11px 18px', fontSize: '13px' }}
+                    style={{ padding: '12px 24px', fontSize: '13.5px', fontWeight: '800' }}
                   >
                     <Plus size={16} />
-                    <span>Yangi e’lon</span>
-                  </button>
-                  <button
-                    className="btn-secondary"
-                    onClick={handleLoadDemo}
-                    style={{ padding: '11px 18px', fontSize: '13px', background: '#FFF9DB', border: '1px solid #FFD400' }}
-                  >
-                    <Sparkles size={16} color="#B8860B" />
-                    <span>Demo variantni yuklash</span>
+                    <span>Birinchi bo‘lib e’lon berish</span>
                   </button>
                 </div>
                 <div style={{
@@ -1103,10 +1098,6 @@ export default function App() {
             }}
             onToggleBannerStatus={(bId) => {
               setBanners(prev => prev.map(b => b.id === bId ? { ...b, active: !b.active } : b));
-            }}
-            onLoadSampleData={() => {
-              setProperties(SAMPLE_TEST_PROPERTIES);
-              showToast('Test namunaviy e’lonlar yuklandi! (15 ta)');
             }}
             onClearAllData={() => {
               setProperties([]);

@@ -651,28 +651,6 @@ export default function AdminPanelModal({
           {activeTab === 'listings' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                {onLoadSampleData && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      tg.haptic('selection');
-                      onLoadSampleData();
-                    }}
-                    style={{
-                      flex: 1,
-                      background: '#FFF9DB',
-                      border: '1px solid #FFD400',
-                      borderRadius: '10px',
-                      padding: '8px 10px',
-                      fontSize: '11.5px',
-                      fontWeight: '700',
-                      color: '#111315',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    + Test e’lonlarni yuklash
-                  </button>
-                )}
                 {onClearAllData && listings.length > 0 && (
                   <button
                     type="button"
