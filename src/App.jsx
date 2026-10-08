@@ -31,6 +31,16 @@ import {
   isDateExpired
 } from './data/mockData';
 import { tg } from './utils/telegram';
+import {
+  isFirebaseConfigured,
+  subscribeToProperties,
+  savePropertyToFirebase,
+  deletePropertyFromFirebase,
+  subscribeToPaymentRequests,
+  savePaymentRequestToFirebase,
+  subscribeToBillingSettings,
+  saveBillingSettingsToFirebase
+} from './services/firebase';
 
 export default function App() {
   // Telegram User & Init
@@ -237,6 +247,26 @@ export default function App() {
     localStorage.setItem('uygo_payment_requests', JSON.stringify(paymentRequests));
   }, [paymentRequests]);
 
+  // Real-time Firebase Synchronization (Multi-user cloud database)
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    const unsubProps = subscribeToProperties((items) => {
+      if (items && Array.isArray(items)) setProperties(items);
+    });
+    const unsubPayments = subscribeToPaymentRequests((items) => {
+      if (items && Array.isArray(items)) setPaymentRequests(items);
+    });
+    const unsubSettings = subscribeToBillingSettings((settings) => {
+      if (settings) setBillingSettings(settings);
+    });
+
+    return () => {
+      unsubProps();
+      unsubPayments();
+      unsubSettings();
+    };
+  }, []);
+
   // Automatic Expiry Check for TOP, VIP and Banners
   useEffect(() => {
     const runExpiryCheck = () => {
@@ -405,9 +435,10 @@ export default function App() {
     showToast('🧹 Barcha e’lonlar tozalandi');
   };
 
-  // Add listing
+  // Add listing (Saves to state + Firebase)
   const handleAddListing = (newProp) => {
     setProperties(prev => [newProp, ...prev]);
+    savePropertyToFirebase(newProp);
     showToast('E’loningiz muvaffaqiyatli joylandi! ✨');
   };
 
@@ -492,9 +523,10 @@ export default function App() {
     }
   };
 
-  // User submits payment request with receipt
+  // User submits payment request with receipt (Saves to state + Firebase)
   const handleSubmitPaymentRequest = (newRequest) => {
     setPaymentRequests(prev => [newRequest, ...prev]);
+    savePaymentRequestToFirebase(newRequest);
     showToast('To‘lov chekingiz tekshirish uchun yuborildi ⏳');
   };
 
@@ -539,35 +571,34 @@ export default function App() {
       setBanners(prev => [newBanner, ...prev]);
     }
 
-    setPaymentRequests(prev => prev.map(p => {
-      if (p.id === requestId) {
-        return {
-          ...p,
-          status: 'approved',
-          startDate,
-          endDate
-        };
-      }
-      return p;
-    }));
+    const updatedReq = {
+      ...req,
+      status: 'approved',
+      startDate,
+      endDate
+    };
+
+    setPaymentRequests(prev => prev.map(p => p.id === requestId ? updatedReq : p));
+    savePaymentRequestToFirebase(updatedReq);
 
     showToast(`✅ To‘lov tasdiqlandi! ${req.packageType} faollashdi (${startDate} — ${endDate})`);
   };
 
   // Admin rejects payment request
   const handleRejectPayment = (requestId) => {
-    setPaymentRequests(prev => prev.map(p => {
-      if (p.id === requestId) {
-        return { ...p, status: 'rejected' };
-      }
-      return p;
-    }));
+    const req = paymentRequests.find(p => p.id === requestId);
+    if (req) {
+      const updatedReq = { ...req, status: 'rejected' };
+      setPaymentRequests(prev => prev.map(p => p.id === requestId ? updatedReq : p));
+      savePaymentRequestToFirebase(updatedReq);
+    }
     showToast('❌ To‘lov rad etildi');
   };
 
   // Admin updates billing settings
   const handleSaveBillingSettings = (newSettings) => {
     setBillingSettings(newSettings);
+    saveBillingSettingsToFirebase(newSettings);
     showToast('To‘lov sozlamalari yangilandi! 💳');
   };
 
@@ -1080,6 +1111,7 @@ export default function App() {
             }}
             onDeleteListing={(id) => {
               setProperties(prev => prev.filter(p => p.id !== id));
+              deletePropertyFromFirebase(id);
               showToast('E’lon o‘chirildi');
             }}
             onToggleVipListing={(id) => {
