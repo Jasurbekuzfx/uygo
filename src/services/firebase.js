@@ -13,14 +13,15 @@ import {
   orderBy 
 } from 'firebase/firestore';
 
-// Default / Environment Firebase Config
+// Real Production Firebase Config for UYGO
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB2IuSnze1t_UCMAhdT6GUW_1nO4aWvfmY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "uygo-5727a.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "uygo-5727a",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "uygo-5727a.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "178781246395",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:178781246395:web:18420d06de746171aa2a9e",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-PSLKEG8CNL"
 };
 
 // Check if Firebase is properly configured with project keys
