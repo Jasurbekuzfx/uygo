@@ -1,6 +1,7 @@
 // Realistic Mock Data for UYGO Telegram Mini App
 
 export const REGIONS = [
+  'Barchasi',
   'Toshkent',
   'Samarqand',
   'Farg‘ona',
@@ -16,6 +17,7 @@ export const REGIONS = [
 ];
 
 export const DISTRICTS = {
+  'Barchasi': ['Barchasi'],
   'Toshkent': [
     'Barchasi',
     'Yunusobod',

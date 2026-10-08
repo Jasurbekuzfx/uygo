@@ -27,28 +27,30 @@ export default function PropertyCard({
     owner
   } = property;
 
-  // Format price exactly as screenshot:
-  // e.g. "450,000 so'm/kun" (split into 2 lines if needed) or "49,000 $"
+  // Format price safely:
   const renderPrice = () => {
+    const numPrice = Number(price) || 0;
+    const numPriceUsd = Number(priceUsd) || 0;
+
     if (purpose === 'daily') {
       return (
         <div className="card-price-stack">
-          <span className="card-price-number">{price.toLocaleString('en-US')}</span>
+          <span className="card-price-number">{numPrice.toLocaleString('en-US')}</span>
           <span className="card-price-unit">so‘m/kun</span>
         </div>
       );
     }
-    if (currency === 'USD' && priceUsd) {
+    if (currency === 'USD' && numPriceUsd) {
       return (
         <div className="card-price-stack">
-          <span className="card-price-number">{priceUsd.toLocaleString('en-US')} $</span>
+          <span className="card-price-number">{numPriceUsd.toLocaleString('en-US')} $</span>
         </div>
       );
     }
     if (purpose === 'rent') {
       return (
         <div className="card-price-stack">
-          <span className="card-price-number">{price.toLocaleString('en-US')}</span>
+          <span className="card-price-number">{numPrice.toLocaleString('en-US')}</span>
           <span className="card-price-unit">so‘m/oy</span>
         </div>
       );
@@ -56,7 +58,7 @@ export default function PropertyCard({
     // Sale in UZS or other
     return (
       <div className="card-price-stack">
-        <span className="card-price-number">{price.toLocaleString('en-US')} so‘m</span>
+        <span className="card-price-number">{numPrice.toLocaleString('en-US')} so‘m</span>
       </div>
     );
   };

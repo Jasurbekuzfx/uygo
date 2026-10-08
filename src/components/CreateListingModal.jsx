@@ -31,22 +31,63 @@ export default function CreateListingModal({
 
   // Photos list - clean empty initial state
   const [photos, setPhotos] = useState([]);
+  const [isCompressing, setIsCompressing] = useState(false);
 
-  const handleFileUpload = (e) => {
+  // Compress images to max 1200px JPEG quality 0.72 (~60-90KB each) to prevent Firestore 1MB doc limits
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+
+          if (width > height && width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.72);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     tg.haptic('selection');
+    setIsCompressing(true);
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setPhotos(prev => {
-          if (prev.length >= 12) return prev;
-          return [...prev, uploadEvent.target.result];
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      for (const file of files) {
+        if (photos.length >= 12) break;
+        const compressed = await compressImage(file);
+        if (compressed) {
+          setPhotos(prev => {
+            if (prev.length >= 12) return prev;
+            return [...prev, compressed];
+          });
+        }
+      }
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const removePhoto = (idx) => {
@@ -209,6 +250,27 @@ export default function CreateListingModal({
                       style={{ display: 'none' }} 
                     />
                   </label>
+
+                  {/* Uploading indicator */}
+                  {isCompressing && (
+                    <div style={{
+                      width: '84px',
+                      height: '84px',
+                      borderRadius: '16px',
+                      border: '1.5px dashed #FFD400',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#FFFDF0',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: '#111315',
+                      flexShrink: 0
+                    }}>
+                      <span>⏳ Rasm...</span>
+                    </div>
+                  )}
 
                   {/* Uploaded photos previews */}
                   {photos.map((pUrl, idx) => (

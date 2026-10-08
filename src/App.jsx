@@ -46,16 +46,15 @@ export default function App() {
   // Telegram User & Init
   const [currentUser, setCurrentUser] = useState(null);
 
-  // App Main State (Real Production: Starts clean)
+  // App Main State (Real Production: Starts clean, syncs live with Firestore)
   const [properties, setProperties] = useState(() => {
     const saved = localStorage.getItem('uygo_properties_live');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Filter out mock data if exists
-          const clean = parsed.filter(p => !String(p.id).startsWith('prop-top-') && !String(p.id).startsWith('prop-'));
-          return clean;
+          const legacyMockIds = ['prop-1', 'prop-2', 'prop-3', 'prop-4', 'prop-5', 'prop-6', 'prop-7', 'prop-8', 'prop-top-1', 'prop-top-2'];
+          return parsed.filter(p => p && p.id && !legacyMockIds.includes(p.id));
         }
       } catch (e) {}
     }
@@ -73,8 +72,8 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const clean = parsed.filter(id => !String(id).startsWith('prop-top-') && !String(id).startsWith('prop-'));
-          return clean;
+          const legacyMockIds = ['prop-1', 'prop-2', 'prop-3', 'prop-4', 'prop-5', 'prop-6', 'prop-7', 'prop-8', 'prop-top-1', 'prop-top-2'];
+          return parsed.filter(id => !legacyMockIds.includes(id));
         }
       } catch (e) {}
     }
@@ -87,8 +86,7 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const clean = parsed.filter(c => !String(c.id).startsWith('conv-'));
-          return clean;
+          return parsed.filter(c => c && c.id && !['conv-1', 'conv-2', 'conv-3'].includes(c.id));
         }
       } catch (e) {}
     }
@@ -167,14 +165,14 @@ export default function App() {
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('Toshkent');
+  const [selectedRegion, setSelectedRegion] = useState('Barchasi');
   const [selectedPurposeTab, setSelectedPurposeTab] = useState('all'); // 'all', 'sale', 'rent', 'daily'
   const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'apartment', etc.
 
   const [detailedFilters, setDetailedFilters] = useState({
     purpose: 'all',
     type: 'all',
-    region: 'Toshkent',
+    region: 'Barchasi',
     district: 'Barchasi',
     rooms: 'Barchasi',
     minPrice: '',
@@ -251,7 +249,14 @@ export default function App() {
   useEffect(() => {
     if (!isFirebaseConfigured) return;
     const unsubProps = subscribeToProperties((items) => {
-      if (items && Array.isArray(items)) setProperties(items);
+      if (items && Array.isArray(items)) {
+        const legacyMockIds = ['prop-1', 'prop-2', 'prop-3', 'prop-4', 'prop-5', 'prop-6', 'prop-7', 'prop-8', 'prop-top-1', 'prop-top-2'];
+        const validListings = items.filter(p => p && p.id && p.title && !legacyMockIds.includes(p.id));
+        setProperties(validListings);
+        try {
+          localStorage.setItem('uygo_properties_live', JSON.stringify(validListings));
+        } catch (e) {}
+      }
     });
     const unsubPayments = subscribeToPaymentRequests((items) => {
       if (items && Array.isArray(items)) setPaymentRequests(items);
@@ -331,8 +336,10 @@ export default function App() {
   // Filter properties logic
   const filteredProperties = useMemo(() => {
     return properties.filter(prop => {
-      // Region filter
-      if (selectedRegion && prop.region !== selectedRegion) {
+      if (!prop) return false;
+
+      // Region filter - 'Barchasi' shows listings from all regions
+      if (selectedRegion && selectedRegion !== 'Barchasi' && prop.region && prop.region !== selectedRegion) {
         return false;
       }
 
@@ -391,10 +398,10 @@ export default function App() {
       // Search query (matches title, district, description, address)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchesTitle = prop.title.toLowerCase().includes(q);
-        const matchesDistrict = prop.district.toLowerCase().includes(q);
-        const matchesDesc = prop.description.toLowerCase().includes(q);
-        const matchesRooms = `${prop.rooms} xona`.includes(q);
+        const matchesTitle = (prop.title || '').toLowerCase().includes(q);
+        const matchesDistrict = (prop.district || '').toLowerCase().includes(q);
+        const matchesDesc = (prop.description || '').toLowerCase().includes(q);
+        const matchesRooms = `${prop.rooms || ''} xona`.includes(q);
         if (!matchesTitle && !matchesDistrict && !matchesDesc && !matchesRooms) {
           return false;
         }
@@ -436,10 +443,15 @@ export default function App() {
   };
 
   // Add listing (Saves to state + Firebase)
-  const handleAddListing = (newProp) => {
+  const handleAddListing = async (newProp) => {
     setProperties(prev => [newProp, ...prev]);
-    savePropertyToFirebase(newProp);
-    showToast('E’loningiz muvaffaqiyatli joylandi! ✨');
+    showToast('E’lon joylanmoqda... ⏳');
+    const success = await savePropertyToFirebase(newProp);
+    if (success) {
+      showToast('E’loningiz muvaffaqiyatli joylandi! ✨');
+    } else {
+      showToast('⚠️ E’lon saqlandi, bulutga ulanish tekshirilmoqda');
+    }
   };
 
   // Start chat with owner
