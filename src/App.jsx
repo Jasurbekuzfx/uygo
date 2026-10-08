@@ -26,6 +26,8 @@ import {
   INITIAL_NOTIFICATIONS,
   DEFAULT_BILLING_SETTINGS,
   INITIAL_PAYMENT_REQUESTS,
+  DEFAULT_ADMIN_IDS,
+  isUserAdmin,
   formatDateDDMMYYYY,
   addDaysToDateStr,
   isDateExpired
@@ -103,6 +105,40 @@ export default function App() {
     }
     return INITIAL_PAYMENT_REQUESTS;
   });
+
+  // Admin Access Security (Telegram ID: 8225823974)
+  const [adminIds, setAdminIds] = useState(() => {
+    const saved = localStorage.getItem('uygo_admin_ids');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return DEFAULT_ADMIN_IDS;
+  });
+  const [devAdminUnlocked, setDevAdminUnlocked] = useState(false);
+
+  // Check if current user is authorized Admin
+  const isCurrentAdmin = useMemo(() => {
+    if (devAdminUnlocked) return true;
+    if (!currentUser) return false;
+    return isUserAdmin(currentUser.id, adminIds);
+  }, [currentUser, adminIds, devAdminUnlocked]);
+
+  const handleUnlockAdminPin = () => {
+    if (isCurrentAdmin) {
+      showToast('Siz allaqachon Adminsiz! 👑');
+      return;
+    }
+    const pin = prompt('Admin boshqaruv paneliga kirish uchun PIN-kodni kiriting (Standart: 7777):');
+    if (pin === '7777') {
+      setDevAdminUnlocked(true);
+      showToast('Admin huquqlari berildi! 👑');
+    } else if (pin) {
+      showToast('Noto‘g‘ri PIN-kod!');
+    }
+  };
 
   // Active Screen / Navigation Tab
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'favorites', 'create', 'messages', 'profile'
@@ -931,6 +967,8 @@ export default function App() {
           <div className="main-content-scroll">
             <ProfileScreen
               currentUser={currentUser}
+              isAdmin={isCurrentAdmin}
+              onUnlockAdminPin={handleUnlockAdminPin}
               myListingsCount={myListings.length}
               favoritesCount={favorites.length}
               totalViews={totalMyViews}
@@ -947,7 +985,13 @@ export default function App() {
                 setActiveChatId(null);
               }}
               onOpenMonetization={() => setShowMonetizationModal(true)}
-              onOpenAdminPanel={() => setShowAdminModal(true)}
+              onOpenAdminPanel={() => {
+                if (!isCurrentAdmin) {
+                  showToast('Faqat Admin kira oladi!');
+                  return;
+                }
+                setShowAdminModal(true);
+              }}
               onOpenCreateListing={() => setShowCreateModal(true)}
               onUpdateUser={(updated) => {
                 setCurrentUser(updated);

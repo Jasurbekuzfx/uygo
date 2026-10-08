@@ -514,6 +514,17 @@ export const SAMPLE_TEST_PROPERTIES = [
   }
 ];
 
+export const DEFAULT_ADMIN_IDS = [
+  '8225823974'
+];
+
+export function isUserAdmin(userId, customAdminIds = []) {
+  if (!userId) return false;
+  const targetId = String(userId).trim();
+  const allAdmins = [...DEFAULT_ADMIN_IDS, ...(Array.isArray(customAdminIds) ? customAdminIds.map(String) : [])];
+  return allAdmins.includes(targetId);
+}
+
 export const DEFAULT_BILLING_SETTINGS = {
   cardNumber: '8600 4910 2345 6789',
   cardHolder: 'UYGO ADMIN',

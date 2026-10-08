@@ -597,6 +597,20 @@ export default function AdminPanelModal({
                 </div>
               </div>
 
+              {/* 3. Admin Huquqlari va Xavfsizlik */}
+              <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E8ECEF', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#111315', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Shield size={16} color="#FFD400" />
+                  <span>3. Super Admin Huquqi</span>
+                </div>
+                <div style={{ fontSize: '12.5px', color: '#111315', fontWeight: '700' }}>
+                  Asosiy Telegram ID: <code style={{ background: '#FFF9DB', padding: '2px 6px', borderRadius: '4px', color: '#B28900' }}>8225823974</code>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#7E858E', lineHeight: 1.4 }}>
+                  Faqat ushbu Telegram ID ga ega foydalanuvchiga profilda "Admin Boshqaruv Paneli" ko‘rinadi. Boshqa hech kim (oddiy foydalanuvchilar) admin panelni ko‘ra olmaydi va kira olmaydi.
+                </div>
+              </div>
+
               {settingsSavedNotice && (
                 <div style={{
                   background: '#E6FCF5',

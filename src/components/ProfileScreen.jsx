@@ -8,6 +8,8 @@ import { tg } from '../utils/telegram';
 
 export default function ProfileScreen({
   currentUser,
+  isAdmin = false,
+  onUnlockAdminPin,
   myListingsCount = 0,
   favoritesCount = 0,
   totalViews = 0,
@@ -121,8 +123,27 @@ export default function ProfileScreen({
           <div style={{ fontSize: '13px', color: '#7E858E', fontWeight: '500', marginBottom: '4px' }}>
             {currentUser?.phone || 'Telefon raqam kiritilmagan'}
           </div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#F0F2F5', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', color: '#111315', fontWeight: '600' }}>
-            Telegram: {currentUser?.username || '@foydalanuvchi'}
+          <div 
+            onClick={() => {
+              if (onUnlockAdminPin) onUnlockAdminPin();
+            }}
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '4px', 
+              background: isAdmin ? '#FFF9DB' : '#F0F2F5', 
+              border: isAdmin ? '1px solid #FFD400' : 'none',
+              padding: '2px 8px', 
+              borderRadius: '6px', 
+              fontSize: '11px', 
+              color: '#111315', 
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+            title={isAdmin ? "Super Admin" : "Foydalanuvchi"}
+          >
+            {isAdmin ? '👑 Super Admin: ' : 'Telegram: '}
+            {currentUser?.username || (currentUser?.id ? `ID: ${currentUser.id}` : '@foydalanuvchi')}
           </div>
         </div>
       </div>
@@ -314,31 +335,35 @@ export default function ProfileScreen({
         })}
       </div>
 
-      {/* Admin Panel Entry Button */}
-      <button
-        onClick={() => {
-          tg.haptic('medium');
-          onOpenAdminPanel();
-        }}
-        style={{
-          width: '100%',
-          background: '#F7F8FA',
-          border: '1.5px dashed #111315',
-          borderRadius: '16px',
-          padding: '14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          fontSize: '13.5px',
-          fontWeight: '700',
-          color: '#111315',
-          cursor: 'pointer'
-        }}
-      >
-        <Shield size={16} color="#111315" />
-        <span>Admin boshqaruv paneli (Platforma menejeri)</span>
-      </button>
+      {/* Admin Panel Entry Button (ONLY VISIBLE IF USER IS ADMIN: 8225823974) */}
+      {isAdmin && (
+        <button
+          onClick={() => {
+            tg.haptic('medium');
+            onOpenAdminPanel();
+          }}
+          style={{
+            width: '100%',
+            background: '#111315',
+            border: '2px solid #FFD400',
+            borderRadius: '16px',
+            padding: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: '13.5px',
+            fontWeight: '800',
+            color: '#FFD400',
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-md)',
+            marginTop: '8px'
+          }}
+        >
+          <Shield size={16} color="#FFD400" />
+          <span>Admin Boshqaruv Paneli 👑</span>
+        </button>
+      )}
 
       {/* 1. Modal: Edit Profile */}
       {showEditProfile && (
