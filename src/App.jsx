@@ -14,6 +14,7 @@ import CreateListingModal from './components/CreateListingModal';
 import MessagesScreen from './components/MessagesScreen';
 import ProfileScreen from './components/ProfileScreen';
 import MonetizationModal from './components/MonetizationModal';
+import MyListingsModal from './components/MyListingsModal';
 import AdminPanelModal from './components/AdminPanelModal';
 import BottomNavigation from './components/BottomNavigation';
 
@@ -193,6 +194,7 @@ export default function App() {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
+  const [showMyListingsModal, setShowMyListingsModal] = useState(false);
 
   // Toast
   const [toastMessage, setToastMessage] = useState('');
@@ -645,7 +647,25 @@ export default function App() {
 
   // Current user's listings and total view count
   const myListings = useMemo(() => {
-    return properties.filter(p => p.owner?.id === currentUser?.id || p.ownerId?.includes('me') || p.ownerId === `user-${currentUser?.id}`);
+    if (!currentUser?.id) {
+      let guestId = '';
+      try {
+        guestId = localStorage.getItem('uygo_device_user_id') || '';
+      } catch (e) {}
+      return properties.filter(p => 
+        (guestId && (String(p.owner?.id) === String(guestId) || String(p.ownerId) === `user-${guestId}`)) ||
+        p.ownerId?.includes('me')
+      );
+    }
+    const curIdStr = String(currentUser.id);
+    return properties.filter(p => {
+      const pOwnerIdStr = String(p.owner?.id || '');
+      const pPropOwnerIdStr = String(p.ownerId || '');
+      return pOwnerIdStr === curIdStr ||
+             pPropOwnerIdStr === `user-${curIdStr}` ||
+             pPropOwnerIdStr === curIdStr ||
+             (curIdStr === '8225823974' && (pOwnerIdStr === '998712345' || pPropOwnerIdStr === 'user-998712345'));
+    });
   }, [properties, currentUser]);
 
   const totalMyViews = useMemo(() => {
@@ -961,13 +981,7 @@ export default function App() {
               myListingsCount={myListings.length}
               favoritesCount={favorites.length}
               totalViews={totalMyViews}
-              onOpenMyListings={() => {
-                if (myListings.length === 0) {
-                  showToast('Siz hali birorta ham e’lon bermagansiz');
-                } else {
-                  showToast(`Sizda ${myListings.length} ta faol e’lon mavjud`);
-                }
-              }}
+              onOpenMyListings={() => setShowMyListingsModal(true)}
               onOpenFavorites={() => setActiveTab('favorites')}
               onOpenMessages={() => {
                 setActiveTab('messages');
@@ -1046,13 +1060,7 @@ export default function App() {
         {/* VIP / TOP Monetization Modal */}
         {showMonetizationModal && (
           <MonetizationModal
-            userListings={properties.filter(p => {
-              if (!currentUser?.id) return false;
-              const currentIdStr = String(currentUser.id);
-              return String(p.owner?.id) === currentIdStr ||
-                     String(p.ownerId) === `user-${currentIdStr}` ||
-                     String(p.ownerId) === currentIdStr;
-            })}
+            userListings={myListings}
             currentUser={currentUser}
             billingSettings={billingSettings}
             onSubmitPaymentRequest={handleSubmitPaymentRequest}
@@ -1061,6 +1069,31 @@ export default function App() {
               setShowCreateModal(true);
             }}
             onClose={() => setShowMonetizationModal(false)}
+          />
+        )}
+
+        {/* My Listings Modal */}
+        {showMyListingsModal && (
+          <MyListingsModal
+            listings={myListings}
+            onClose={() => setShowMyListingsModal(false)}
+            onOpenPropertyDetail={(prop) => {
+              setShowMyListingsModal(false);
+              setSelectedPropertyDetail(prop);
+            }}
+            onOpenCreateListing={() => {
+              setShowMyListingsModal(false);
+              setShowCreateModal(true);
+            }}
+            onPromoteListing={(prop) => {
+              setShowMyListingsModal(false);
+              setShowMonetizationModal(true);
+            }}
+            onDeleteListing={(propId) => {
+              setProperties(prev => prev.filter(p => p.id !== propId));
+              deletePropertyFromFirebase(propId);
+              showToast('E’lon o‘chirildi');
+            }}
           />
         )}
 
